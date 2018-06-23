@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="BaseGraphics">
+      <UniqueIdentifier>{daec0d96-42e9-41dc-8825-4e03203ddaf3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tools">
+      <UniqueIdentifier>{b4dda01d-343a-4767-b557-7875ff0d5eea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Entity">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="OcTree.h">
+      <Filter>Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="Transform.h">
+      <Filter>Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="I3DObject.h">
+      <Filter>BaseGraphics</Filter>
+    </ClInclude>
+    <ClInclude Include="ISceneObject.h">
+      <Filter>BaseGraphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>BaseGraphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Ray.h">
+      <Filter>BaseGraphics</Filter>
+    </ClInclude>
+    <ClInclude Include="TrianglePrimitive.h">
+      <Filter>BaseGraphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="STLParser.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderMgr.h">
+      <Filter>Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="Point.h">
+      <Filter>BaseGraphics</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>BaseGraphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Ray.cpp">
+      <Filter>BaseGraphics</Filter>
+    </ClCompile>
+    <ClCompile Include="TrianglePrimitive.cpp">
+      <Filter>BaseGraphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Logger.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="STLParser.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="Timer.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="OcTree.cpp">
+      <Filter>Entity</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>Entity</Filter>
+    </ClCompile>
+    <ClCompile Include="Transform.cpp">
+      <Filter>Entity</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderMgr.cpp">
+      <Filter>Entity</Filter>
+    </ClCompile>
+    <ClCompile Include="Point.cpp">
+      <Filter>BaseGraphics</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
