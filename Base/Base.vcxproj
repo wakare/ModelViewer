@@ -22,7 +22,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{E2B2A927-8C0D-4EF3-9D7A-632A3D79A121}</ProjectGuid>
     <RootNamespace>Base</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -47,7 +47,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -124,6 +124,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="FontImport.h" />
     <ClInclude Include="I3DObject.h" />
     <ClInclude Include="ISceneObject.h" />
     <ClInclude Include="Logger.h" />
@@ -139,6 +140,7 @@
     <ClInclude Include="TrianglePrimitive.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="FontImport.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="OcTree.cpp" />

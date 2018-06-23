@@ -11,6 +11,11 @@ ShaderMgr::ShaderMgr(const char* szVertexShaderPath, const char* szFragmentShade
 		return;
 }
 
+ShaderMgr::ShaderMgr()
+{
+
+}
+
 ShaderMgr::~ShaderMgr()
 {
 	UnInit();
@@ -48,11 +53,6 @@ bool ShaderMgr::Init(const char* szVertexShaderPath, const char* szFragmentShade
 
 bool ShaderMgr::UnInit()
 {
-	for (auto shaderObject : m_shaderObjects)
-	{
-		// TODO:Release shared_ptr<>? 
-	}
-
 	m_shaderObjects.clear();
 	return true;
 }
@@ -66,9 +66,9 @@ bool ShaderMgr::CompileShader()
 		GLint success = GL_FALSE;
 
 		const GLchar* ShaderSource = shaderPair.second->m_sShaderText.c_str();
-		const GLchar* vertexShaderArray[1] = { ShaderSource };
+		const GLchar* shaderArray[1] = { ShaderSource };
 
-		glShaderSource(shader, 1, vertexShaderArray, nullptr);
+		glShaderSource(shader, 1, shaderArray, nullptr);
 		glCompileShader(shader);
 		glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
 
@@ -81,7 +81,7 @@ bool ShaderMgr::CompileShader()
 			// Print Compile Error
 			if (success == GL_FALSE)
 			{
-				glGetShaderInfoLog(shaderType, 512, NULL, infoLog);
+				glGetShaderInfoLog(shader, 512, NULL, infoLog);
 				std::cout << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << std::endl;
 			}
 		}
@@ -149,6 +149,13 @@ void ShaderMgr::SetUniformVariableFloat3(GLuint shaderProgram, const char * unif
 	GLint variableLocation = glGetUniformLocation(shaderProgram, uniformName);
 	glUseProgram(shaderProgram);
 	glUniform3f(variableLocation, value.fX, value.fY, value.fZ);
+}
+
+void ShaderMgr::SetUniformVariableInt1(GLuint shaderProgram, const char * uniformName, GLboolean value)
+{
+	GLint variableLocation = glGetUniformLocation(shaderProgram, uniformName);
+	glUseProgram(shaderProgram);
+	glUniform1i(variableLocation, value);
 }
 
 

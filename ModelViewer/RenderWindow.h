@@ -18,7 +18,6 @@ class RenderWindow
 private:
 	static std::shared_ptr<RenderWindow> g_pInstance;
 
-	GLFWwindow*						m_pWindow;
 	std::shared_ptr<Camera>			m_pMainCamera;
 	std::shared_ptr<MainManager>	m_pMainManager;
 
@@ -30,12 +29,14 @@ public:
 	int		m_nHeight;
 	bool	m_inputPressState[1024];
 
+	GLFWwindow*	m_pWindow;
+
 	~RenderWindow();
 	static RenderWindow& Instance();
 	void Run();
 protected:
 	void Update();
-	void RenderOneFrame();
+	void Render();
 
 	void KeyEvent(int key, int scancode, int action, int mods);
 	void ResizeEvent(int width, int height);

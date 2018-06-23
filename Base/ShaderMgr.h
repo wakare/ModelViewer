@@ -4,7 +4,6 @@
 #include <map>
 #include <memory>
 #include <GL/glew.h>
-
 #include "Shader.h"
 #include "WJMath.h"
 
@@ -20,6 +19,7 @@ private:
 
 public:
 	ShaderMgr(const char* szVertexShaderPath, const char* szFragmentShaderPath);
+	ShaderMgr();
 	~ShaderMgr();
 
 	bool Init(const char* szVertexShaderPath, const char* szFragmentShaderPath);
@@ -33,4 +33,5 @@ public:
 	static void SetUniformVariableMatrix4(GLuint shaderProgram, const char* uniformName, Matrix4 transformMatrix);
 	static void SetUniformVariableFloat1(GLuint shaderProgram, const char* uniformName, GLfloat value);
 	static void SetUniformVariableFloat3(GLuint shaderProgram, const char* uniformName, Vector3 value);
+	static void SetUniformVariableInt1(GLuint shaderProgram, const char* uniformName, GLboolean value);
 };

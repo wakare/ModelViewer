@@ -2,13 +2,40 @@
 #include "TrianglePrimitive.h"
 #include "FontRenderer.h"
 #include "Logger.h"
+#include "GLFontObjectImpl.h"
+#include "MainManager.h"
 
-FontRenderer::FontRenderer():m_nTextFieldWidth(200), m_nTextFieldHeight(400), m_nFontWidth(10), m_nFontHeight(15), m_nLineHeight(11), m_nCurrentLinesCount(0), m_nWindowWidth(800), m_nWindowHeight(600)
+FontRenderer::FontRenderer()
+	:m_nTextFieldWidth(200), m_nTextFieldHeight(400), m_nFontWidth(10), m_nFontHeight(15), m_nLineHeight(11), 
+	m_nCurrentLinesCount(0), m_nWindowWidth(800), m_nWindowHeight(600), m_bIsOpenLogRender(false)
+{
+	if (!Init())
+	{
+		Logger::Log(LogType::ERR, "FontRenderer init failed.");
+		return;
+	}
+}
+
+bool FontRenderer::Init()
 {
 	if (!m_importer.LoadFontFile("Resources/Font/ASCII.bmp"))
 	{
 		Logger::Log(LogType::ERR, "Load texture failed");
 	}
+
+	m_pFontSubProcess = std::make_shared<FontSubProcess>(m_importer.m_nTextureWidth, m_importer.m_nTextureHeight, m_importer.m_pTextureData);
+	assert(m_pFontSubProcess);
+
+	m_pFontSubProcess->EnableOrDisableGLState(GL_DEPTH, true);
+	m_pFontSubProcess->AddStateFuncClosure(std::make_pair(glDepthFunc, FuncVar(GL_ALWAYS, 0)));
+	m_pFontSubProcess->EnableOrDisableGLState(GL_BLEND, true);
+	m_pFontSubProcess->AddStateFuncClosure(std::make_pair(glBlendFunc, FuncVar(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)));
+	return true;
+}
+
+void FontRenderer::AfterInit()
+{
+	MainManager::GetInstance()->GetRenderMgr()->RegisterSubProcess(RenderSubProcessLevel::LEVEL_2, m_pFontSubProcess);
 }
 
 void FontRenderer::AddString(std::string sText)
@@ -83,35 +110,54 @@ void FontRenderer::AddString(std::string sText)
 		fontMesh.m_p3DObjectVec.push_back(triangle2);
 	}
 
-	if (!fontMesh.InitGLData())
+	m_fontMeshVec.push_back(fontMesh);
+
+	auto& primitiveData = fontMesh.GetPrimitiveData();
+	std::shared_ptr<GLFontObjectImpl> pFontObject = std::make_shared<GLFontObjectImpl>
+		(primitiveData.m_nVertexCount, primitiveData.m_nFloatCountPerVertex, primitiveData.m_pfVertexData);
+	
+	if (!pFontObject->Init())
 	{
-		Logger::Log(LogType::FATAL, "Init fontMesh failed.");
+		assert(false);
+		Logger::Log(LogType::ERR, "font object init failed.");
 		return;
 	}
 
-	m_fontMeshVec.push_back(fontMesh);
+	m_pFontSubProcess->AddGLObject(pFontObject);
 
 	m_nCurrentLinesCount++;
 }
 
 void FontRenderer::Update()
 {
+	m_pFontSubProcess->SetEnableRender(m_bIsOpenLogRender);
+	
 	for (auto fontMesh : m_fontMeshVec)
 	{
 		fontMesh.Update();
 	}
 }
-
-void FontRenderer::Render()
-{
-	for (auto fontMesh : m_fontMeshVec)
-	{
-		fontMesh.Render(Transform(), Transform());
-	}
-}
-
 void FontRenderer::Clear()
 {
 	m_fontMeshVec.clear();
+	m_pFontSubProcess->ClearGLObjects();
 	m_nCurrentLinesCount = 0;
+}
+
+void FontRenderer::OpenLog()
+{
+	m_bIsOpenLogRender = true;
+}
+
+void FontRenderer::CloseLog()
+{
+	m_bIsOpenLogRender = false;
+}
+
+void FontRenderer::OpenOrCloseLog()
+{
+	if (m_bIsOpenLogRender)
+		CloseLog();
+	else
+		OpenLog();
 }

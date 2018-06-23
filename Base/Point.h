@@ -10,13 +10,12 @@ private:
 	GLuint m_VAO;
 	GLuint m_VBO;
 
-	bool InitShaderMgr();
 public:
 	Point(Vector3 position, Vector3 color): m_color(color), m_position(position) {};
 
 	PrimitiveData GetPrimitiveData();
 	bool InitSpaceAccelerateStruct();
-	bool InitGLData();
 	void Update();
-	void Render(Transform viewTransform, Transform projTransform);
+	void SetPosition(const Vector3& position);
+	void SetColor(const Vector3& color);
 };

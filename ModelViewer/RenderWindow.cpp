@@ -88,14 +88,8 @@ void RenderWindow::Run()
 
 	while (!glfwWindowShouldClose(m_pWindow))
 	{
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 		Update();
-		RenderOneFrame();
-		
-		glfwSwapBuffers(m_pWindow);
-		glfwPollEvents();
+		Render();
 	}
 }
 
@@ -104,9 +98,9 @@ void RenderWindow::Update()
 	m_pMainManager->Update();
 }
 
-void RenderWindow::RenderOneFrame()
+void RenderWindow::Render()
 {
-	m_pMainManager->RenderOneFrame();
+	m_pMainManager->Render();
 }
 
 void RenderWindow::KeyEvent(int key, int scancode, int action, int mods)
@@ -134,6 +128,16 @@ void RenderWindow::KeyEvent(int key, int scancode, int action, int mods)
 	if (key == GLFW_KEY_DELETE && action == GLFW_PRESS)
 	{
 		m_pMainManager->ClearString();
+	}
+
+	if (key == GLFW_KEY_C && action == GLFW_PRESS)
+	{
+		m_pMainManager->GetFontRenderer()->OpenOrCloseLog();
+	}
+
+	if (key == GLFW_KEY_V && action == GLFW_PRESS)
+	{
+		m_pMainManager->GetSceneMgr()->EnableOrDisableLight();
 	}
 
 	// Control camera movement
@@ -194,6 +198,9 @@ void RenderWindow::MouseMoveEvent(GLFWwindow * window, double xPos, double yPos)
 		bFirstMove = false;
 		return;
 	}
+
+	// Test
+	m_pMainManager->MouseClick(xPos, yPos);
 
 	// Handle rotate
 	if (m_inputPressState[GLFW_MOUSE_BUTTON_RIGHT])

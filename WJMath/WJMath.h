@@ -6,7 +6,7 @@
 #define FLOAT_DEVIATION 1e-6f
 #define FLOAT_INFINITE 1e20f
 
-inline bool IsZeroFloat(float f)
+inline bool IsZero(float f)
 {
 	return fabs(f) < FLOAT_DEVIATION;
 }

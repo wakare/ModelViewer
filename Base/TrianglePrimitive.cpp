@@ -7,9 +7,9 @@ int TrianglePrimitive::GetVertexCount()
 	return g_nVertexCount;
 }
 
+// -1.0f == no hit 
 float TrianglePrimitive::HasIntersectionAlongRay(const Ray& ray, double& outU, double& outV, double& outW)
 {
-	// return -1.0f represent have on intersection point
 	float fDistance = -1.0f;
 
 	// Get triangle plane equation
@@ -46,7 +46,7 @@ float TrianglePrimitive::HasIntersectionAlongRay(const Ray& ray, double& outU, d
 		static_cast<double>(m_vertices[1][0]) * static_cast<double>(m_vertices[0][1]) * static_cast<double>(m_vertices[2][2]) -
 		static_cast<double>(m_vertices[0][0]) * static_cast<double>(m_vertices[2][1]) * static_cast<double>(m_vertices[1][2]);
 
-	if (IsZeroFloat(D))
+	if (IsZero(static_cast<float>(D)))
 		return -1.0f;
 
 	double rhD = 1.0 / D;
@@ -93,8 +93,7 @@ float TrianglePrimitive::HasIntersectionAlongRay(const Ray& ray, double& outU, d
 	outV = v;
 	outW = w;
 
-	Logger::Log(LogType::INFO, Format("Intersection UVW = (%f, %f, %f)",
-		outU, outV, outW));
+	Logger::Log(LogType::INFO, Format("Intersection UVW = (%f, %f, %f)", outU, outV, outW));
 
 	assert(fDistance >= 0.0f);
 	SetSelected(true);

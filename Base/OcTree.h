@@ -33,6 +33,7 @@ public:
 	const std::shared_ptr<Vector3> GetCenterPosition();
 	float AABBIntersectWithRay(const Ray& ray);
 	
-	static bool  IsObjInsideAABB(Vector3 position, const Vector3& minCoord, const Vector3& maxCoord);
+	static bool  IsObjInsideAABB(const Vector3& position, const Vector3& minCoord, const Vector3& maxCoord);
 	static float CubeIntersectWithRay(const Ray& ray, const Vector3& minCoord, const Vector3& maxCoord);
+	static float SphereIntersectWithRay(const Ray& ray, const Vector3& centerCoord, float fRadius);
 };

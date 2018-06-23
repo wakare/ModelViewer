@@ -224,7 +224,7 @@ bool OcTree::AddNode(std::shared_ptr<I3DObject> pNode)
 	return true;
 }
 
-bool OcTree::IsObjInsideAABB(Vector3 position, const Vector3& minCoord, const Vector3& maxCoord)
+bool OcTree::IsObjInsideAABB(const Vector3& position, const Vector3& minCoord, const Vector3& maxCoord)
 {
 	bool bInsideX = minCoord.fX <= position.fX && position.fX <= maxCoord.fX;
 	bool bInsideY = minCoord.fY <= position.fY && position.fY <= maxCoord.fY;
@@ -241,11 +241,10 @@ float OcTree::AABBIntersectWithRay(const Ray & ray)
 	if (m_centerPosition == nullptr || m_fSpaceHalfLength < 0.0f)
 		return fDistance;
 
-	Vector3 minCoord = { m_centerPosition->fX - m_fSpaceHalfLength, m_centerPosition->fY - m_fSpaceHalfLength , m_centerPosition->fZ - m_fSpaceHalfLength };
-	Vector3 maxCoord = { m_centerPosition->fX + m_fSpaceHalfLength, m_centerPosition->fY + m_fSpaceHalfLength , m_centerPosition->fZ + m_fSpaceHalfLength };
+	// 1.8 near sqrt(3)
+	float fRadius = m_fSpaceHalfLength * 1.8f;
+	fDistance = OcTree::SphereIntersectWithRay(ray, *m_centerPosition, fRadius);
 
-	fDistance = OcTree::CubeIntersectWithRay(ray, minCoord, maxCoord);
-	
 	return fDistance;
 }
 
@@ -323,28 +322,52 @@ float OcTree::CubeIntersectWithRay(const Ray & ray, const Vector3& minCoord, con
 	// Get nearest intersection point
 	fResult = fMinStep;
 
-	// Segment line length check
-	if (fResult >= 0.0f && ray.m_bIsSegmentLine)
-	{
-		float fSegmentLineLength = -1.0f;
-		if (!bIsRayDirXZero)
-			fSegmentLineLength = (ray.m_endPosition.fX - ray.m_startPosition.fX) / ray.m_direction.fX;
-		else if (!bIsRayDirYZero)
-			fSegmentLineLength = (ray.m_endPosition.fY - ray.m_startPosition.fY) / ray.m_direction.fY;
-		else if (!bIsRayDirZZero)
-			fSegmentLineLength = (ray.m_endPosition.fZ - ray.m_startPosition.fZ) / ray.m_direction.fZ;
-		
-		assert(fSegmentLineLength > 0.0f);
-		if (fSegmentLineLength <= 0.0f)
-		{
-			Logger::Log(LogType::FATAL, "SegmentLine length is zero.");
-			return -1.0f;
-		}
+	//// Segment line length check
+	//if (fResult >= 0.0f && ray.m_bIsSegmentLine)
+	//{
+	//	float fSegmentLineLength = -1.0f;
+	//	if (!bIsRayDirXZero)
+	//		fSegmentLineLength = (ray.m_endPosition.fX - ray.m_startPosition.fX) / ray.m_direction.fX;
+	//	else if (!bIsRayDirYZero)
+	//		fSegmentLineLength = (ray.m_endPosition.fY - ray.m_startPosition.fY) / ray.m_direction.fY;
+	//	else if (!bIsRayDirZZero)
+	//		fSegmentLineLength = (ray.m_endPosition.fZ - ray.m_startPosition.fZ) / ray.m_direction.fZ;
+	//	
+	//	assert(fSegmentLineLength > 0.0f);
+	//	if (fSegmentLineLength <= 0.0f)
+	//	{
+	//		Logger::Log(LogType::FATAL, "SegmentLine length is zero.");
+	//		return -1.0f;
+	//	}
 
-		// Over segment line length, intersection do not exist
-		if (fSegmentLineLength < fResult)
-			return -1.0f;
-	}
+	//	// Over segment line length, intersection do not exist
+	//	if (fSegmentLineLength < fResult)
+	//		return -1.0f;
+	//}
 
 	return fResult;
+}
+
+float OcTree::SphereIntersectWithRay(const Ray& ray, const Vector3& centerCoord, float fRadius)
+{
+	float fDistance = -1.0f;
+
+	Vector3 tempDirection = centerCoord - ray.m_startPosition;
+	float fSphereDistance = tempDirection.Length();
+
+	// Inside sphere
+	if (fSphereDistance < fRadius)
+		return 0.0f;
+
+	tempDirection.Normalize();
+	float fCosAngle = tempDirection * ray.m_direction;
+	if (fCosAngle < 0.0f)
+		return fDistance;
+
+	float fSinAngle = sqrt(1 - fCosAngle * fCosAngle);
+	float fSphereToRayDistance = fSphereDistance * fSinAngle;
+	if (fabs(fSphereToRayDistance) < fRadius)
+		fDistance = fSphereDistance;
+
+	return fDistance;
 }

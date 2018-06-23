@@ -5,14 +5,15 @@
 #include "Mesh.h"
 #include "MainManager.h"
 #include "Timer.h"
+#include "GL3DObjectImpl.h"
 
-std::shared_ptr<I3DObject> SceneMgr::_calcualteRayIntersection(const Ray & ray, std::shared_ptr<OcTree> pOcTree, double& outCoordU, double& outCoordV, double& outCoordW)
+std::shared_ptr<I3DObject> SceneMgr::_calcualteRayIntersection(const Ray & ray, std::shared_ptr<OcTree>& pOcTree, double& outCoordU, double& outCoordV, double& outCoordW)
 {
-	float fNearestIntersectionDistance = -1.0f;
 	std::shared_ptr<I3DObject> pNearestIntersection = nullptr;
+	float fNearestIntersectionDistance = -1.0f;
 	double fIntersectU = -1.0f;
 	double fIntersectV = -1.0f;
-	double fIntersectW = -1.0f;
+	float fIntersectW = -1.0f;
 
 	// Ray intersection do not exist
 	if (pOcTree->AABBIntersectWithRay(ray) < 0.0f)
@@ -34,9 +35,9 @@ std::shared_ptr<I3DObject> SceneMgr::_calcualteRayIntersection(const Ray & ray, 
 				{
 					fNearestIntersectionDistance = fDistance;
 					pNearestIntersection = pOcTree->m_pNodeData;
-					fIntersectU = outU;
-					fIntersectV = outV;
-					fIntersectW = outW;
+					fIntersectU = static_cast<float>(outU);
+					fIntersectV = static_cast<float>(outV);
+					fIntersectW = static_cast<float>(outW);
 
 					break;
 				}
@@ -57,18 +58,18 @@ std::shared_ptr<I3DObject> SceneMgr::_calcualteRayIntersection(const Ray & ray, 
 						{
 							fNearestIntersectionDistance = fDistance;
 							pNearestIntersection = it3DObject;
-							fIntersectU = outU;
-							fIntersectV = outV;
-							fIntersectW = outW;
+							fIntersectU = static_cast<float>(outU);
+							fIntersectV = static_cast<float>(outV);
+							fIntersectW = static_cast<float>(outW);
 						}
 
 						if (fDistance < fNearestIntersectionDistance)
 						{
 							fNearestIntersectionDistance = fDistance;
 							pNearestIntersection = it3DObject;
-							fIntersectU = outU;
-							fIntersectV = outV;
-							fIntersectW = outW;
+							fIntersectU = static_cast<float>(outU);
+							fIntersectV = static_cast<float>(outV);
+							fIntersectW = static_cast<float>(outW);
 						}
 					}
 				}
@@ -83,7 +84,7 @@ std::shared_ptr<I3DObject> SceneMgr::_calcualteRayIntersection(const Ray & ray, 
 		struct _tempIntersectInfo
 		{
 			std::shared_ptr<OcTree> m_pSubTree;
-			const float m_fDistance;
+			float m_fDistance;
 
 			_tempIntersectInfo(std::shared_ptr<OcTree> pOcTree, float fDistance) :
 				m_pSubTree(pOcTree), m_fDistance(fDistance) {}
@@ -116,7 +117,7 @@ std::shared_ptr<I3DObject> SceneMgr::_calcualteRayIntersection(const Ray & ray, 
 				intersectInfoVec.push_back({ itSubTree, fDistance });
 		}
 
-		// If ray original position is inside, calculate inside subTree firstly
+		// Ray inside, calculate inside subTree firstly
 		if (pInsideSubTree != nullptr)
 		{
 			double outU;
@@ -127,49 +128,58 @@ std::shared_ptr<I3DObject> SceneMgr::_calcualteRayIntersection(const Ray & ray, 
 			if (pIntersection != nullptr)
 			{
 				pNearestIntersection = pIntersection;
-				fIntersectU = outU;
-				fIntersectV = outV;
-				fIntersectW = outW;
+				fIntersectU = static_cast<float>(outU);
+				fIntersectV = static_cast<float>(outV);
+				fIntersectW = static_cast<float>(outW);
 				break;
 			}
 		}
 
-		for (auto it : intersectInfoVec)
+		// Simple swap lambda function
+		auto swapElements = [=](decltype(intersectInfoVec)& intersectInfoVec, int index1, int index2)
+		{
+			auto tempSubTree = intersectInfoVec[index1].m_pSubTree;
+			intersectInfoVec[index1].m_pSubTree = intersectInfoVec[index2].m_pSubTree;
+			intersectInfoVec[index2].m_pSubTree = tempSubTree;
+
+			auto tempDistance = intersectInfoVec[index1].m_fDistance;
+			intersectInfoVec[index1].m_fDistance = intersectInfoVec[index2].m_fDistance;
+			intersectInfoVec[index2].m_fDistance = tempDistance;
+		};
+
+		// Sort intersect point by distance
+		if (intersectInfoVec.size() > 1)
+		{
+			for (int i = 0; i < intersectInfoVec.size() - 1; i++)
+			{
+				if (intersectInfoVec[i].m_fDistance > intersectInfoVec[i + 1].m_fDistance)
+				{
+					swapElements(intersectInfoVec, i, i + 1);
+					i -= 2;
+					i = (i < -1) ? -1 : i;
+				}
+			}
+		}
+
+		// Ray outside
+		for (int i = 0; i < intersectInfoVec.size(); i++)
 		{
 			double outU;
 			double outV;
 			double outW;
 
-			auto pIntersection = _calcualteRayIntersection(ray, it.m_pSubTree, outU, outV, outW);
+			auto pIntersection = _calcualteRayIntersection(ray, intersectInfoVec[i].m_pSubTree, outU, outV, outW);
 			if (pIntersection != nullptr)
 			{
-				float f3DObjectIntersectionDistance = it.m_fDistance;
-
-				// First intersection
-				if (fNearestIntersectionDistance < 0.0f)
-				{
-					// Assume triangle distance equals AABB distance
-					fNearestIntersectionDistance = f3DObjectIntersectionDistance;
-					pNearestIntersection = pIntersection;
-					fIntersectU = outU;
-					fIntersectV = outV;
-					fIntersectW = outW;
-
-					continue;
-				}
-
-				if (fNearestIntersectionDistance > f3DObjectIntersectionDistance)
-				{
-					fNearestIntersectionDistance = f3DObjectIntersectionDistance;
-					pNearestIntersection = pIntersection;
-					fIntersectU = outU;
-					fIntersectV = outV;
-					fIntersectW = outW;
-
-					continue;
-				}
+				fNearestIntersectionDistance = intersectInfoVec[i].m_fDistance;
+				pNearestIntersection = pIntersection;
+				fIntersectU = static_cast<float>(outU);
+				fIntersectV = static_cast<float>(outV);
+				fIntersectW = static_cast<float>(outW);
+				break;
 			}
 		}
+
 	} while (false);
 
 	if (pNearestIntersection)
@@ -184,43 +194,100 @@ std::shared_ptr<I3DObject> SceneMgr::_calcualteRayIntersection(const Ray & ray, 
 
 SceneMgr::SceneMgr()
 {
+	m_pOcTreeVec.clear();
 	m_sceneObjectVec.clear();
+
 	m_mainCamera = std::make_shared<Camera>();
-	// _addTestSceneObject();
+	m_pOriginalMeshSubProcess = std::make_shared<MeshSubProcess>();
+	
+	m_pCurrentSelectObject = nullptr;
+	m_pSelectedMeshSubProcess = nullptr;
 }
 
 bool SceneMgr::InitSpaceAccelerateStruct()
 {
 	for (auto itSceneObject : m_sceneObjectVec)
 	{
-		if (!itSceneObject->InitSpaceAccelerateStruct())
+		if (!itSceneObject.first->InitSpaceAccelerateStruct())
 			return false;
 
-		m_pOcTreeVec.push_back(itSceneObject->m_pOcTree);
+		m_pOcTreeVec.push_back(itSceneObject.first->m_pOcTree);
 	}
 
 	return true;
 }
 
-bool SceneMgr::InitGLData()
+bool SceneMgr::_initRenderSubProcess(std::shared_ptr<MeshSubProcess> pSubProcess, 
+	std::vector<std::pair<std::shared_ptr<ISceneObject>, std::shared_ptr<IGLObject>>>& sceneObjectVec)
 {
-	for (auto pSceneObject : m_sceneObjectVec)
+	pSubProcess->EnableOrDisableGLState(GL_DEPTH_TEST, true);
+	pSubProcess->AddStateFuncClosure(std::make_pair(glDepthFunc, FuncVar(GL_LEQUAL, 0)));
+	for (auto& sceneObject : sceneObjectVec)
 	{
-		if (!pSceneObject->InitGLData())
-		{
-			Logger::Log(LogType::ERR, "Init GLData failed.");
+		auto& primitiveData = sceneObject.first->GetPrimitiveData();
+		std::shared_ptr<IGLObject> pGLObject = std::make_shared<GL3DObjectImpl>
+			(primitiveData.m_nVertexCount, primitiveData.m_nFloatCountPerVertex, primitiveData.m_pfVertexData, GL_TRIANGLES);
+
+		if (!pGLObject->Init())
 			return false;
-		}
+		pGLObject->SetTranslate(sceneObject.first->m_modelTranslateTransform);
+		pGLObject->SetRotate(sceneObject.first->m_modelRotateTransform);
+
+		sceneObject.second = pGLObject;
+		pSubProcess->AddGLObject(pGLObject);
 	}
 
+	if (!pSubProcess->Init())
+		return false;
+	
 	return true;
+}
+
+bool SceneMgr::_addSubProcessToRenderMgr(std::shared_ptr<MeshSubProcess> subProcess)
+{
+	if (!MainManager::GetInstance()->GetRenderMgr()->RegisterSubProcess(RenderSubProcessLevel::LEVEL_1, subProcess))
+		return false;
+
+	return true;
+}
+
+bool SceneMgr::Init()
+{
+	if (!_initRenderSubProcess(m_pOriginalMeshSubProcess, m_sceneObjectVec))
+		return false;
+
+	return true;
+}
+
+void SceneMgr::AfterInit()
+{
+	if (!_addSubProcessToRenderMgr(m_pOriginalMeshSubProcess ))
+		Logger::Log(LogType::ERR, "Add SubProcess failed!");
 }
 
 void SceneMgr::Update()
 {
 	for (auto pSceneObject : m_sceneObjectVec)
 	{
-		pSceneObject->Update();
+		pSceneObject.first->Update();
+		pSceneObject.second->SetRotate(pSceneObject.first->m_modelRotateTransform);
+		pSceneObject.second->SetTranslate(pSceneObject.first->m_modelTranslateTransform);
+	}
+
+	auto ploygonMode = (MainManager::GetInstance()->m_renderType == RenderType::FILLED) ? GL_FILL : GL_LINE;
+	if (m_pOriginalMeshSubProcess)
+	{
+		m_pOriginalMeshSubProcess->SetPolygonMode(ploygonMode);
+		for (auto sceneObj : m_sceneObjectVec)
+		{
+			if (sceneObj.first->m_bSelected)
+				sceneObj.second->SetColor({ 1.0, 0.0f, 0.0f });
+		}
+	}
+
+	if (m_pSelectedMeshSubProcess)
+	{
+		m_pSelectedMeshSubProcess->SetPolygonMode(GL_LINE);
 	}
 }
 
@@ -233,7 +300,7 @@ bool SceneMgr::SetMainCamera(std::shared_ptr<Camera> camera)
 
 bool SceneMgr::AddSceneObject(std::shared_ptr<ISceneObject> sceneObject)
 {
-	m_sceneObjectVec.push_back(sceneObject);
+	m_sceneObjectVec.push_back(std::make_pair(sceneObject, nullptr));
 
 	return true;
 }
@@ -244,7 +311,7 @@ bool SceneMgr::DelSceneObject(std::shared_ptr<ISceneObject> sceneObject)
 	auto it = m_sceneObjectVec.begin();
 	for (; it < m_sceneObjectVec.end(); it++)
 	{
-		if (*it == sceneObject)
+		if ((*it).first == sceneObject)
 			break;
 	}
 
@@ -260,7 +327,7 @@ bool SceneMgr::DelSceneObject(std::shared_ptr<ISceneObject> sceneObject)
 bool SceneMgr::GetPrimitiveDataByIndex(int index, PrimitiveData& outPrimitiveData)
 {
 	assert(0 <= index && index < m_sceneObjectVec.size());
-	outPrimitiveData = m_sceneObjectVec[index]->GetPrimitiveData();
+	outPrimitiveData = m_sceneObjectVec[index].first->GetPrimitiveData();
 
 	return true;
 }
@@ -287,20 +354,20 @@ void SceneMgr::MouseClick(double posX, double posY)
 
 	for (auto pSceneObject : m_sceneObjectVec)
 	{
-		Ray screenRay = GenerateScreenRay(posX, posY, static_cast<float>(RenderWindow::Instance().m_nWidth), static_cast<float>(RenderWindow::Instance().m_nHeight),
+		Ray screenRay = _generateScreenRay(posX, posY, static_cast<float>(RenderWindow::Instance().m_nWidth), static_cast<float>(RenderWindow::Instance().m_nHeight),
 			currentTransform.projTransform.GetTransformMatrix(), currentTransform.viewTransform.GetTransformMatrix());
-		Ray modelSpaceRay = _generateModelSpaceRay(screenRay, pSceneObject);
+		Ray modelSpaceRay = _generateModelSpaceRay(screenRay, pSceneObject.first);
 
-		if (pSceneObject->m_pOcTree == nullptr)
+		if (pSceneObject.first->m_pOcTree == nullptr)
 			continue;
 
-		float fDistance = pSceneObject->m_pOcTree->AABBIntersectWithRay(modelSpaceRay);
+		float fDistance = pSceneObject.first->m_pOcTree->AABBIntersectWithRay(modelSpaceRay);
 		if (fDistance >= 0.0f)
 		{
 			if (fNearObjectDistance < 0.0f)
 			{
 				fNearObjectDistance = fDistance;
-				pNearestSceneObject = pSceneObject;
+				pNearestSceneObject = pSceneObject.first;
 				nearestModelSpaceRay = std::make_shared<Ray>();
 				*nearestModelSpaceRay = modelSpaceRay;
 				continue;
@@ -309,7 +376,7 @@ void SceneMgr::MouseClick(double posX, double posY)
 			if (fNearObjectDistance > fDistance)
 			{
 				fNearObjectDistance = fDistance;
-				pNearestSceneObject = pSceneObject;
+				pNearestSceneObject = pSceneObject.first;
 				*nearestModelSpaceRay = modelSpaceRay;
 				continue;
 			}
@@ -351,28 +418,41 @@ void SceneMgr::MouseClick(double posX, double posY)
 
 void SceneMgr::PickSceneObject(std::shared_ptr<ISceneObject> pSceneObject, std::shared_ptr<Ray> pModelSpaceRay)
 {
-	Timer::BeginTimer();
-
 	Logger::Log(LogType::INFO, "Do PickObject.");
 
 	double outU;
 	double outV;
 	double outW;
 
+	Timer::BeginTimer();
 	auto pIntersection = CheckRayIntersect(pSceneObject, *pModelSpaceRay, outU, outV, outW);
+	Logger::Log(LogType::INFO, Format("PickObject finish, hit object: %s ,cost time: %f ms", (pIntersection != nullptr) ? "true" : "false", Timer::EndTimer() * 1000.0f));
+
 	if (pIntersection != nullptr)
 	{
 		Select3DObject(pSceneObject, pIntersection, outU, outV, outW);
 		MainManager::GetInstance()->AddString(Format("hit triangle, coordination = (%f, %f, %f)", outU, outV, outW).c_str());
 	}
-
-	Logger::Log(LogType::INFO, Format("PickObject finish, hit object: %s ,cost time: %f ms", (pIntersection != nullptr) ? "true" : "false", Timer::EndTimer() * 1000.0f));
 }
 
 void SceneMgr::RotateSceneObject(double deltaX, double deltaY)
 {
 	if (m_pCurrentSelectObject != nullptr)
+	{
 		m_pCurrentSelectObject->SelfRotate(deltaX, deltaY);
+		for (auto it : m_sceneObjectVec)
+		{
+			if (it.first.get() == m_pCurrentSelectObject.get())
+			{
+				assert(it.second);
+				if (it.second)
+				{
+					it.second->SetTranslate(m_pCurrentSelectObject->m_modelTranslateTransform);
+					it.second->SetRotate(m_pCurrentSelectObject->m_modelRotateTransform);
+				}
+			}
+		}
+	}
 }
 
 void SceneMgr::Select3DObject(std::shared_ptr<ISceneObject> pSceneObject, std::shared_ptr<I3DObject> p3DObject, double IntersectCoordU, double IntersectCoordV, double IntersectCoordW)
@@ -384,35 +464,79 @@ void SceneMgr::Select3DObject(std::shared_ptr<ISceneObject> pSceneObject, std::s
 
 	int nVertexCount = p3DObject->GetVertexCount();
 
-	std::shared_ptr<Mesh> pExtraMesh = std::make_shared<Mesh>();
-	pExtraMesh->m_p3DObjectVec.push_back(p3DObject);
-	pExtraMesh->m_defaultColor = { 0.0f, 1.0f, 1.0f };
-	pExtraMesh->m_primitiveData.m_nFloatCountPerVertex = 6;
-	pExtraMesh->m_nTriangleNumber = 1;
-	pExtraMesh->m_modelRotateTransform = pSceneObject->m_modelRotateTransform;
-	pExtraMesh->m_modelTranslateTransform = pSceneObject->m_modelTranslateTransform;
-	pExtraMesh->InitGLData();
-	
-	m_selectStruct.m_selectObject = pExtraMesh;
 	Vector3 intersectPosition =
-		p3DObject->GetVertex3DCoordByIndex(0) * IntersectCoordU +
-		p3DObject->GetVertex3DCoordByIndex(1) * IntersectCoordV +
-		p3DObject->GetVertex3DCoordByIndex(2) * IntersectCoordW;
+		p3DObject->GetVertex3DCoordByIndex(0) * static_cast<float>(IntersectCoordU) +
+		p3DObject->GetVertex3DCoordByIndex(1) * static_cast<float>(IntersectCoordV) +
+		p3DObject->GetVertex3DCoordByIndex(2) * static_cast<float>(IntersectCoordW);
 
-	/*Vector3 intersectPosition;
-	intersectPosition.fX =
-		p3DObject->GetVertex3DCoordByIndex(0).fX * IntersectCoordU +
-		p3DObject->GetVertex3DCoordByIndex(1).fX * IntersectCoordV +
-		p3DObject->GetVertex3DCoordByIndex(2).fX * IntersectCoordW;*/
+	if (!m_selectStruct.m_selectObject)
+	{
+		assert((!m_selectStruct.m_selectObject) && (!m_selectStruct.m_selectPoint));
 
-	Logger::Log(LogType::INFO, Format("Calculate triangle position = (%f, %f, %f)",
-		intersectPosition.fX, intersectPosition.fY, intersectPosition.fZ));
+		auto selectedMesh = std::make_shared<Mesh>();
+		selectedMesh->m_nTriangleNumber = 1;
+		selectedMesh->m_defaultColor = { 0.0f, 1.0f, 1.0f };
+		m_selectStruct.m_selectObject = selectedMesh;
 
-	m_selectStruct.m_selectPoint = std::make_shared<Point>(intersectPosition, Vector3(1.0f, 1.0f, 1.0f));
+		auto selectedPoint = std::make_shared<Point>(intersectPosition, Vector3(1.0f, 1.0f, 1.0f));
+		selectedPoint->m_modelRotateTransform = pSceneObject->m_modelRotateTransform;
+		selectedPoint->m_modelTranslateTransform = pSceneObject->m_modelTranslateTransform;
+		m_selectStruct.m_selectPoint = selectedPoint;
+	}
+
+	m_selectStruct.m_selectObject->m_p3DObjectVec.clear();
+	m_selectStruct.m_selectObject->m_p3DObjectVec.push_back(p3DObject);
+	m_selectStruct.m_selectObject->m_primitiveData.m_nFloatCountPerVertex = 6;
+	m_selectStruct.m_selectObject->m_modelRotateTransform = pSceneObject->m_modelRotateTransform;
+	m_selectStruct.m_selectObject->m_modelTranslateTransform = pSceneObject->m_modelTranslateTransform;
+
+	m_selectStruct.m_selectPoint->SetPosition(intersectPosition);
 	m_selectStruct.m_selectPoint->m_modelRotateTransform = pSceneObject->m_modelRotateTransform;
 	m_selectStruct.m_selectPoint->m_modelTranslateTransform = pSceneObject->m_modelTranslateTransform;
-	if (!m_selectStruct.m_selectPoint->InitGLData())
-		assert(false);
+
+	m_selectStruct.m_selectObject->ClearPrimitiveData();
+	m_selectStruct.m_selectPoint->ClearPrimitiveData();
+
+	// Init SelectedMesh sub process
+	if (m_pSelectedMeshSubProcess == nullptr)
+	{
+		m_pSelectedMeshSubProcess = std::make_shared<MeshSubProcess>();
+		m_pSelectedMeshSubProcess->EnableOrDisableGLState(GL_DEPTH_TEST, true);
+		m_pSelectedMeshSubProcess->AddStateFuncClosure(std::make_pair(glDepthFunc, FuncVar(GL_ALWAYS, 0)));
+
+		if (!m_pSelectedMeshSubProcess->Init())
+			return;
+
+		_addSubProcessToRenderMgr(m_pSelectedMeshSubProcess);
+		return;
+	}
+
+	// Update Selected object
+	m_pSelectedMeshSubProcess->ClearGLObjects();
+	for (int i = 0; i < 2; i++)
+	{
+		std::shared_ptr<ISceneObject> sceneObject = nullptr;
+		if (i == 0)
+			sceneObject = m_selectStruct.m_selectObject;
+		else
+			sceneObject = m_selectStruct.m_selectPoint;
+
+		auto& primitiveData = sceneObject->GetPrimitiveData();
+		std::shared_ptr<IGLObject> pGLObject = std::make_shared<GL3DObjectImpl>
+			(primitiveData.m_nVertexCount, primitiveData.m_nFloatCountPerVertex, primitiveData.m_pfVertexData, (i == 0) ? GL_TRIANGLES : GL_POINTS);
+
+		if (!pGLObject->Init())
+		{
+			Logger::Log(LogType::ERR, "Init GL object failed.");
+			return;
+		}
+
+		pGLObject->SetTranslate(sceneObject->m_modelTranslateTransform);
+		pGLObject->SetRotate(sceneObject->m_modelRotateTransform);
+		pGLObject->SetColor({ 0.0f, 1.0f, 1.0f });
+
+		m_pSelectedMeshSubProcess->AddGLObject(pGLObject);
+	}
 }
 
 int SceneMgr::GetSceneObjectCount()
@@ -430,21 +554,9 @@ void SceneMgr::ClearScene()
 	m_sceneObjectVec.clear();
 }
 
-void SceneMgr::Render()
+void SceneMgr::EnableOrDisableLight()
 {
-	auto currentTransform = MainManager::GetInstance()->GetCurrentTransform();
-
-	for (int nIndex = 0; nIndex < m_sceneObjectVec.size(); nIndex++)
-	{
-		auto pSceneObject = m_sceneObjectVec[nIndex];
-		pSceneObject->Render(currentTransform.viewTransform, currentTransform.projTransform);
-	}
-
-	if (m_selectStruct.m_selectObject != nullptr)
-	{
-		m_selectStruct.m_selectObject->Render(currentTransform.viewTransform, currentTransform.projTransform);
-		m_selectStruct.m_selectPoint->Render(currentTransform.viewTransform, currentTransform.projTransform);
-	}
+	m_pOriginalMeshSubProcess->EnableOrDisableLight();
 }
 
 void SceneMgr::ReSize(int nWidth, int nHeight)
@@ -452,11 +564,11 @@ void SceneMgr::ReSize(int nWidth, int nHeight)
 	
 }
 
-Ray SceneMgr::GenerateScreenRay(double dblPosX, double dblPosY, float nWidth, float nHeight, Matrix4 projMatrix, Matrix4 viewMatrix)
+Ray SceneMgr::_generateScreenRay(double dblPosX, double dblPosY, float fWidth, float fHeight, Matrix4 projMatrix, Matrix4 viewMatrix)
 {
 	Ray ray;
-	float fPosX = static_cast<float>(dblPosX / static_cast<double>(nWidth));
-	float fPosY = static_cast<float>(dblPosY / static_cast<double>(nHeight));
+	float fPosX = static_cast<float>(dblPosX / static_cast<double>(fWidth));
+	float fPosY = static_cast<float>(dblPosY / static_cast<double>(fHeight));
 
 	assert(m_pProjTransformStruct);
 	if (m_pProjTransformStruct == nullptr)
@@ -507,83 +619,4 @@ Ray SceneMgr::_generateModelSpaceRay(const Ray & screenSpaceRay, std::shared_ptr
 
 	Ray modelSpaceRay(rayPositionV3, rayDirectionV3);
 	return modelSpaceRay;
-}
-
-void SceneMgr::_addTestSceneObject()
-{
-	// Test Init
-	std::shared_ptr<Mesh> pMesh = std::make_shared<Mesh>();
-	
-	auto triangleVertex = new float[216]
-	{
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f, 0.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-
-		-0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f,
-
-		-0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f,
-
-		 0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f,
-
-		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-
-		-0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-	};
-
-	for (int i = 0; i < 12; i++)
-	{
-		std::shared_ptr<TrianglePrimitive> m_p3DObject = std::make_shared<TrianglePrimitive>();
-		TrianglePrimitive& object = *m_p3DObject;
-		object.m_vertices[0][0] = triangleVertex[18 * i];
-		object.m_vertices[0][1] = triangleVertex[18 * i + 1];
-		object.m_vertices[0][2] = triangleVertex[18 * i + 2];
-		
-		object.m_vertices[1][0] = triangleVertex[18 * i + 6];
-		object.m_vertices[1][1] = triangleVertex[18 * i + 7];
-		object.m_vertices[1][2] = triangleVertex[18 * i + 8];
-
-		object.m_vertices[2][0] = triangleVertex[18 * i + 12];
-		object.m_vertices[2][1] = triangleVertex[18 * i + 13];
-		object.m_vertices[2][2] = triangleVertex[18 * i + 14];
-
-		object.m_normalVec[0] = triangleVertex[18 * i + 3];
-		object.m_normalVec[0] = triangleVertex[18 * i + 4];
-		object.m_normalVec[0] = triangleVertex[18 * i + 5];
-
-		pMesh->m_p3DObjectVec.push_back(m_p3DObject);
-	}
-	pMesh->m_nTriangleNumber = 12;
-	pMesh->m_primitiveData.m_nVertexCount = 36;
-	pMesh->m_primitiveData.m_nFloatCountPerVertex = 6;
-	
-	AddSceneObject(pMesh);
 }

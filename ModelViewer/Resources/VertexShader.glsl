@@ -9,10 +9,14 @@ uniform mat4 projectionMatrix;
 uniform vec3 vertexColor;
 
 out vec3 outColor;
+out vec3 outNormal;
+out vec3 viewDirection;
 
 void main()
 {
-	gl_Position = 
-	projectionMatrix * viewMatrix * modelMatrix * vec4(position.x, position.y, position.z, 1.0);
+	vec4 viewPosition = viewMatrix * modelMatrix * vec4(position.x, position.y, position.z, 1.0);
+	gl_Position = projectionMatrix * viewPosition;
 	outColor = vertexColor;
+	outNormal = normal;
+	viewDirection = normalize(-viewPosition).xyz;
 }

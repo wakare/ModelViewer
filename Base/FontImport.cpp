@@ -2,7 +2,6 @@
 #include <assert.h>
 
 #include "FontImport.h"
-#include "SOIL.h"
 #include "Logger.h"
 
 bool FontImport::_loadBMPFile(const char * szBMPPath, int * nWidth, int * nHeight)
@@ -61,8 +60,6 @@ bool FontImport::_loadBMPFile(const char * szBMPPath, int * nWidth, int * nHeigh
 
 void FontImport::_loadTextureData(const char * szFilePath, int * nWidth, int * nHeight)
 {
-	m_pTextureData = SOIL_load_image(szFilePath, nWidth, nHeight, 0, SOIL_LOAD_RGBA);
-	
 	if (!_loadBMPFile(szFilePath, nWidth, nHeight))
 		Logger::Log(LogType::ERR, "Load BMP file failed.");
 
@@ -137,7 +134,7 @@ bool FontImport::LoadFontFile(const char* pFNTFile, const char * pTextureFile)
 	std::getline(fileStream, temp);
 	std::getline(fileStream, temp);
 
-	int nOffset = temp.find('=');
+	int nOffset = static_cast<int>(temp.find('='));
 	auto sCount = temp.substr(nOffset + 1, temp.length() - nOffset - 1);
 	int nCount = std::atoi(sCount.c_str());
 	int nCurrentIndex = 0;

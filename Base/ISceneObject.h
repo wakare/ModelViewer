@@ -14,13 +14,9 @@ struct PrimitiveData
 
 class ISceneObject
 {
-private:
-	virtual bool InitShaderMgr() = 0;
-
 public:
 	std::vector<std::shared_ptr<I3DObject>> m_p3DObjectVec;
 	std::shared_ptr<OcTree> m_pOcTree;
-	std::shared_ptr<ShaderMgr> m_pShaderMgr;
 	PrimitiveData m_primitiveData;
 	Transform m_modelTranslateTransform;
 	Transform m_modelRotateTransform;
@@ -34,10 +30,9 @@ public:
 		Transform::GetSelfRotateInfo(deltaX, deltaY, 0.005f, rotateAxis, fRotateAngle);
 		m_modelRotateTransform.Rotate(fRotateAngle, rotateAxis);
 	}
+	void ClearPrimitiveData() { delete m_primitiveData.m_pfVertexData; m_primitiveData.m_pfVertexData = nullptr;};
 
 	virtual PrimitiveData GetPrimitiveData() = 0;
 	virtual bool InitSpaceAccelerateStruct() = 0;
-	virtual bool InitGLData() = 0;
 	virtual void Update() = 0;
-	virtual void Render(Transform viewTransform, Transform projTransform) = 0;
 };

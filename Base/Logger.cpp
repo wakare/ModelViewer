@@ -10,6 +10,6 @@ void Logger::Log(LogType eType, const char* szString, OutputDevice outputDevice)
 	if (outputDevice == OutputDevice::CONSOLE)
 		std::cout << szString << std::endl;
 
-	else if (outputDevice == OutputDevice::WINDOW)
-		;
+	// TODO: Print log to window
+	// else if (outputDevice == OutputDevice::WINDOW)
 }

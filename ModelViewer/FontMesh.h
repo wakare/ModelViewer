@@ -11,9 +11,6 @@ private:
 	GLuint m_VBO;
 	GLuint m_textureObject;
 
-	bool _initTexture(int nWidth, int nHeight, unsigned char* pTextureData);
-	bool InitShaderMgr();
-
 public:
 	FontMesh(int TexTriangleCount, int TexWidth, int TexHeight, unsigned char* pTextureData):
 		m_nTriangleNumber(TexTriangleCount), m_nTexWidth(TexWidth), m_nTexHeight(TexHeight), m_pTextureData(pTextureData) {}
@@ -22,7 +19,5 @@ public:
 
 	PrimitiveData GetPrimitiveData();
 	bool InitSpaceAccelerateStruct();
-	bool InitGLData();
 	void Update();
-	void Render(Transform viewTransform, Transform projTransform);
 };

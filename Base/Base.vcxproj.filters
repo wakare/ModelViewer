@@ -56,6 +56,9 @@
     <ClInclude Include="Point.h">
       <Filter>BaseGraphics</Filter>
     </ClInclude>
+    <ClInclude Include="FontImport.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Mesh.cpp">
@@ -90,6 +93,9 @@
     </ClCompile>
     <ClCompile Include="Point.cpp">
       <Filter>BaseGraphics</Filter>
+    </ClCompile>
+    <ClCompile Include="FontImport.cpp">
+      <Filter>Tools</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

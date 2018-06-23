@@ -14,6 +14,15 @@
     <Filter Include="资源文件\FontShader">
       <UniqueIdentifier>{0e25a8ff-a155-46f8-a4d8-ab0d8d7f7145}</UniqueIdentifier>
     </Filter>
+    <Filter Include="资源文件\PointShader">
+      <UniqueIdentifier>{e7051904-3c86-427f-b4b6-7dae7394c311}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="资源文件\3DObjectShader">
+      <UniqueIdentifier>{11f7233d-f417-4211-9058-b5aff9cbdbd1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="资源文件\FontTexture">
+      <UniqueIdentifier>{f0943f79-2901-46ce-ac6e-84dd97afa5b5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MainManager.cpp">
@@ -57,22 +66,28 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\FragmentShader.glsl">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="Resources\VertexShader.glsl">
-      <Filter>资源文件</Filter>
-    </None>
     <None Include="Resources\FontShader\FragmentShader.glsl">
       <Filter>资源文件\FontShader</Filter>
     </None>
     <None Include="Resources\FontShader\VertexShader.glsl">
       <Filter>资源文件\FontShader</Filter>
     </None>
+    <None Include="Resources\Point\FragmentShader.glsl">
+      <Filter>资源文件\PointShader</Filter>
+    </None>
+    <None Include="Resources\Point\VertexShader.glsl">
+      <Filter>资源文件\PointShader</Filter>
+    </None>
+    <None Include="Resources\FragmentShader.glsl">
+      <Filter>资源文件\3DObjectShader</Filter>
+    </None>
+    <None Include="Resources\VertexShader.glsl">
+      <Filter>资源文件\3DObjectShader</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Resources\Font\ASCII.png">
-      <Filter>资源文件</Filter>
+    <Image Include="Resources\Font\ASCII.bmp">
+      <Filter>资源文件\FontTexture</Filter>
     </Image>
   </ItemGroup>
 </Project>

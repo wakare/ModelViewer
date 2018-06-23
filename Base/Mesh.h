@@ -16,7 +16,6 @@ private:
 	GLuint m_VBO;
 	
 	void _moveToScreenCenter();
-	bool InitShaderMgr();
 public:
 	unsigned m_nTriangleNumber;
 	Vector3 m_defaultColor;
@@ -27,8 +26,6 @@ public:
 	bool InitFromSTLData(char* pTriangleData, int nTriangleSize);
 	PrimitiveData GetPrimitiveData();
 	bool InitSpaceAccelerateStruct();
-	void Render(Transform viewTransform, Transform projTransform);
-	bool InitGLData();
 	void Update();
 };
 #endif // MESH_H

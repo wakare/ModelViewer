@@ -7,11 +7,13 @@
 #include "Ray.h"
 #include "Logger.h"
 #include "Point.h"
+#include "Mesh.h"
+#include "MeshSubProcess.h"
 
 struct selectedObjStruct
 {
-	std::shared_ptr<ISceneObject> m_selectObject;
-	std::shared_ptr<ISceneObject> m_selectPoint;
+	std::shared_ptr<Mesh> m_selectObject;
+	std::shared_ptr<Point> m_selectPoint;
 };
 
 struct ProjTransformStruct
@@ -43,16 +45,23 @@ struct ProjTransformStruct
 class SceneMgr
 {
 private:
-	std::vector<std::shared_ptr<ISceneObject>> m_sceneObjectVec;
-	std::shared_ptr<Camera> m_mainCamera;
 	std::vector<std::shared_ptr<OcTree>> m_pOcTreeVec;
+	std::vector<std::pair<std::shared_ptr<ISceneObject>, std::shared_ptr<IGLObject>>> m_sceneObjectVec;
+
+	std::shared_ptr<MeshSubProcess> m_pOriginalMeshSubProcess;
+	std::shared_ptr<MeshSubProcess> m_pSelectedMeshSubProcess;
+
+	std::shared_ptr<Camera> m_mainCamera;
 	std::shared_ptr<ISceneObject> m_pCurrentSelectObject;
 	selectedObjStruct m_selectStruct;
 
-	std::shared_ptr<I3DObject> _calcualteRayIntersection(const Ray& ray, std::shared_ptr<OcTree> ocTree, double& outCoordU, double& outCoordV, double& outCoordW);
+	std::shared_ptr<I3DObject> _calcualteRayIntersection(const Ray& ray, std::shared_ptr<OcTree>& ocTree, double& outCoordU, double& outCoordV, double& outCoordW);
 	Ray _generateModelSpaceRay(const Ray& screenSpaceRayconst, std::shared_ptr<ISceneObject> pSceneObject);
+	Ray _generateScreenRay(double posX, double posY, float fWidth, float fHeight, Matrix4 projMatrix, Matrix4 viewMatrix);
 
-	void _addTestSceneObject();
+	bool _initRenderSubProcess(std::shared_ptr<MeshSubProcess> pSubProcess, 
+		std::vector<std::pair<std::shared_ptr<ISceneObject>, std::shared_ptr<IGLObject>>>& sceneObjectVec);
+	bool _addSubProcessToRenderMgr(std::shared_ptr<MeshSubProcess> subProcess);
 public:
 	std::shared_ptr<ProjTransformStruct> m_pProjTransformStruct;
 
@@ -66,14 +75,14 @@ public:
 	bool AddSceneObject(std::shared_ptr<ISceneObject> sceneObject);
 	bool DelSceneObject(std::shared_ptr<ISceneObject> sceneObject);
 
-	bool InitGLData();
+	bool Init();
+	void AfterInit();
 	void Update();
-	void Render();
 	void ReSize(int nWidth, int nHeight);
 
 	bool InitSpaceAccelerateStruct();
 	void ClearScene();
-	Ray GenerateScreenRay(double posX, double posY, float nWidth, float nHeight, Matrix4 projMatrix, Matrix4 viewMatrix);
+	void EnableOrDisableLight();
 	
 	std::shared_ptr<I3DObject> CheckRayIntersect(std::shared_ptr<ISceneObject> pSceneObject, const Ray & modelSpaceRay, double& outU, double& outV, double& outW);
 	void MouseClick(double posX, double posY);

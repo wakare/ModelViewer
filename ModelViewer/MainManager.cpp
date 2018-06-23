@@ -4,14 +4,10 @@
 
 std::shared_ptr<MainManager> MainManager::g_pInstance = nullptr;
 
-MainManager::MainManager()
+MainManager::MainManager(): 
+	m_pFontRenderer(nullptr),  m_pRenderMgr(nullptr), m_pSceneMgr(nullptr), m_renderType(RenderType::FILLED)
 {
-	// Init base data 
-	_initMemberVariable();
-	_initSceneData();
 	
-	// Init OpenGL data
-	_initGLData();
 }
 
 std::shared_ptr<MainManager> MainManager::GetInstance()
@@ -45,18 +41,12 @@ bool MainManager::_initMemberVariable()
 	m_pFontRenderer = std::make_shared<FontRenderer>();
 	assert(m_pFontRenderer);
 
+	m_pRenderMgr = std::make_shared<RenderMgr>(m_currentTransform, RenderWindow::Instance().m_pWindow);
+	assert(m_pRenderMgr);
+
 	m_renderType = RenderType::FILLED;
 
 	return true;
-}
-
-void MainManager::_initGLData()
-{
-	// Init render window
-	RenderWindow::Instance();
-	
-	m_pSceneMgr->InitGLData();
-	m_pFontRenderer->AddString("I Love BZ");
 }
 
 void MainManager::_initSceneData()
@@ -80,13 +70,12 @@ void MainManager::Update()
 {
 	m_pSceneMgr->Update();
 	m_currentTransform.viewTransform = m_pSceneMgr->GetMainCamera()->GetViewTransform();
-
 	m_pFontRenderer->Update();
+	m_pRenderMgr->Update();
 }
 
 void MainManager::StartRun()
 {
-	// Window main loop
 	RenderWindow::Instance().Run();
 }
 
@@ -111,24 +100,55 @@ void MainManager::ClearString()
 	}
 }
 
-void MainManager::RenderOneFrame()
+void MainManager::Render()
 {
-	glPolygonMode(GL_FRONT_AND_BACK, (m_renderType == RenderType::WIREFRMAE) ? GL_LINE : GL_FILL);
-	m_pSceneMgr->Render();
-
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	m_pFontRenderer->Render();
+	if (m_pRenderMgr)
+	{
+		m_pRenderMgr->Render();
+	}
 }
 
 void MainManager::MouseClick(double posX, double posY)
 {
 	m_pSceneMgr->MouseClick(posX, posY);
-	//m_pFontRenderer->AddString("Mouse Click!");
+}
+
+bool MainManager::Init()
+{
+	// Init base data 
+	_initMemberVariable();
+	_initSceneData();
+
+	if (!m_pSceneMgr->Init())
+	{
+		Logger::Log(LogType::ERR, "Init sceneMgr failed!");
+		return false;
+	}
+
+	m_pFontRenderer->AddString("I Love BZ");
+
+	return true;
+}
+
+void MainManager::AfterInit()
+{
+	m_pSceneMgr->AfterInit();
+	m_pFontRenderer->AfterInit();
 }
 
 const std::shared_ptr<SceneMgr> MainManager::GetSceneMgr()
 {
 	return m_pSceneMgr;
+}
+
+std::shared_ptr<RenderMgr> MainManager::GetRenderMgr()
+{
+	return m_pRenderMgr;
+}
+
+std::shared_ptr<FontRenderer> MainManager::GetFontRenderer()
+{
+	return m_pFontRenderer;
 }
 
 const SceneTransfrom & MainManager::GetCurrentTransform()

@@ -1,8 +1,14 @@
 #include <iostream>
-#include "RenderWindow.h"
+#include "MainManager.h"
 
 int main(int argc, char* argv[])
 {
-	MainManager::GetInstance()->StartRun();
+	auto mainManager = MainManager::GetInstance();
+	if (!mainManager->Init())
+		return EXIT_FAILURE;
+
+	mainManager->AfterInit();
+	mainManager->StartRun();
+
 	return EXIT_SUCCESS;
 }
