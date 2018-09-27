@@ -98,7 +98,7 @@ void FontSubProcess::Render()
 			return;
 		}
 		glBindVertexArray(VAO);
-		glDrawArrays(Object->GetPrimitiveType(), 0, Object->GetFloatCountPerVertex() * Object->GetVertexCount());
+		glDrawArrays(Object->GetPrimitiveType(), 0, Object->GetVertexCount());
 
 		glBindVertexArray(0);
 	}
